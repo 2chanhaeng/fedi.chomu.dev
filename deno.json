@@ -5,7 +5,7 @@
     "@hono/hono": "jsr:@hono/hono@^4.8.4",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.8.2",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
-    "better-sqlite3": "npm:better-sqlite3@^12.2.0"
+    "sqlite": "jsr:@db/sqlite"
   },
   "unstable": [
     "temporal"

@@ -13,8 +13,8 @@ const app = new Hono();
 app.use(federation(fedi, () => undefined));
 app.post("/setup", async (c) => {
   // 계정이 이미 있는지 검사
-  const user = db.prepare<unknown[], User>("SELECT * FROM users LIMIT 1").get();
-  if (user != null) return c.redirect("/");
+  const user = db.prepare("SELECT * FROM users LIMIT 1").get<User>();
+  if (user !== undefined) return c.redirect("/");
 
   const form = await c.req.formData();
   const username = form.get("username");
@@ -26,8 +26,8 @@ app.post("/setup", async (c) => {
 });
 app.get("/setup", (c) => {
   // 계정이 이미 있는지 검사
-  const user = db.prepare<unknown[], User>("SELECT * FROM users LIMIT 1").get();
-  if (user != null) return c.redirect("/");
+  const user = db.prepare("SELECT * FROM users LIMIT 1").get<User>();
+  if (user !== undefined) return c.redirect("/");
 
   return c.html(
     <Layout>
