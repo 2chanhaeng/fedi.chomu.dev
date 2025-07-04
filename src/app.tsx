@@ -94,11 +94,27 @@ app.get("/users/:username", async (c) => {
     .get<User & Actor>(c.req.param("username"));
   if (user == null) return c.notFound();
 
+  const { followers } = db
+    .prepare(
+      `
+      SELECT count(*) AS followers
+      FROM follows
+      JOIN actors ON follows.following_id = actors.id
+      WHERE actors.user_id = ?
+      `,
+    )
+    .get<{ followers: number }>(user.id)!;
+
   const url = new URL(c.req.url);
   const handle = `@${user.username}@${url.host}`;
   return c.html(
     <Layout>
-      <Profile name={user.name ?? user.username} handle={handle} />
+      <Profile
+        name={user.name ?? user.username}
+        username={user.username}
+        handle={handle}
+        followers={followers}
+      />
     </Layout>,
   );
 });
