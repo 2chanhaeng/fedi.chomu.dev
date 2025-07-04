@@ -1,6 +1,7 @@
 import {
   Accept,
   type Actor as APActor,
+  Create,
   createFederation,
   Endpoints,
   exportJwk,
@@ -213,6 +214,20 @@ federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
       )
       `,
   ).run(followingId, parsed.identifier);
+}).on(Create, async (ctx, create) => {
+  const object = await create.getObject();
+  if (!(object instanceof Note)) return;
+  const actor = create.actorId;
+  if (actor == null) return;
+  const author = await object.getAttribution();
+  if (!isActor(author) || author.id?.href !== actor.href) return;
+  const actorId = (await persistActor(author))?.id;
+  if (actorId == null) return;
+  if (object.id == null) return;
+  const content = object.content?.toString();
+  db.prepare(
+    "INSERT INTO posts (uri, actor_id, content, url) VALUES (?, ?, ?, ?)",
+  ).run(object.id.href, actorId, content, object.url?.href?.toString());
 });
 federation
   .setFollowersDispatcher(
