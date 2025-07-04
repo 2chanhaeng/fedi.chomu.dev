@@ -1,4 +1,5 @@
 import type { FC } from "@hono/hono/jsx";
+import type { Actor } from "./schema.ts";
 
 export const Layout: FC = ({ children }) => (
   <html lang="en">
@@ -55,3 +56,46 @@ export const Profile: FC<ProfileProps> = ({ name, handle }) => (
     </hgroup>
   </>
 );
+
+export interface FollowerListProps {
+  followers: Actor[];
+}
+
+export const FollowerList: FC<FollowerListProps> = ({ followers }) => (
+  <>
+    <h2>Followers</h2>
+    <ul>
+      {followers.map((follower) => (
+        <li key={follower.id}>
+          <ActorLink actor={follower} />
+        </li>
+      ))}
+    </ul>
+  </>
+);
+
+export interface ActorLinkProps {
+  actor: Actor;
+}
+
+export const ActorLink: FC<ActorLinkProps> = ({ actor }) => {
+  const href = actor.url ?? actor.uri;
+  return actor.name == null
+    ? (
+      <a href={href} class="secondary">
+        {actor.handle}
+      </a>
+    )
+    : (
+      <>
+        <a href={href}>{actor.name}</a>{" "}
+        <small>
+          (
+          <a href={href} class="secondary">
+            {actor.handle}
+          </a>
+          )
+        </small>
+      </>
+    );
+};
