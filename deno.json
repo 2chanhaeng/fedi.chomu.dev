@@ -12,5 +12,9 @@
   "tasks": {
     "dev": "deno run -A --watch ./src/index.ts",
     "prod": "deno run -A ./src/index.ts"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@hono/hono/jsx"
   }
 }
