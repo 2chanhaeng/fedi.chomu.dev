@@ -1,5 +1,5 @@
 import type { FC } from "@hono/hono/jsx";
-import type { Actor } from "./schema.ts";
+import type { Actor, User } from "./schema.ts";
 
 export const Layout: FC = ({ children }) => (
   <html lang="en">
@@ -108,3 +108,26 @@ export const ActorLink: FC<ActorLinkProps> = ({ actor }) => {
       </>
     );
 };
+
+export interface HomeProps {
+  user: User & Actor;
+}
+
+export const Home: FC<HomeProps> = ({ user }) => (
+  <>
+    <hgroup>
+      <h1>{user.name}'s microblog</h1>
+      <p>
+        <a href={`/users/${user.username}`}>{user.name}'s profile</a>
+      </p>
+    </hgroup>
+    <form method="post" action={`/users/${user.username}/posts`}>
+      <fieldset>
+        <label>
+          <textarea name="content" required={true} placeholder="What's up?" />
+        </label>
+      </fieldset>
+      <input type="submit" value="Post" />
+    </form>
+  </>
+);
