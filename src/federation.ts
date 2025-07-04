@@ -10,6 +10,7 @@ import {
   InProcessMessageQueue,
   MemoryKvStore,
   Person,
+  type Recipient,
   Undo,
 } from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
@@ -49,6 +50,7 @@ federation.setActorDispatcher(
       url: ctx.getActorUri(identifier),
       publicKey: keys[0].cryptographicKey,
       assertionMethods: keys.map((k) => k.multikey),
+      followers: ctx.getFollowersUri(identifier),
     });
   },
 ).setKeyPairsDispatcher(async (ctx, identifier) => {
@@ -186,5 +188,46 @@ federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
       `,
   ).run(parsed.identifier, undo.actorId.href);
 });
+federation
+  .setFollowersDispatcher(
+    "/users/{identifier}/followers",
+    (ctx, identifier, cursor) => {
+      const followers = db
+        .prepare(
+          `
+          SELECT followers.*
+          FROM follows
+          JOIN actors AS followers ON follows.follower_id = followers.id
+          JOIN actors AS following ON follows.following_id = following.id
+          JOIN users ON users.id = following.user_id
+          WHERE users.username = ?
+          ORDER BY follows.created DESC
+          `,
+        )
+        .all<Actor>(identifier);
+      const items: Recipient[] = followers.map((f) => ({
+        id: new URL(f.uri),
+        inboxId: new URL(f.inbox_url),
+        endpoints: f.shared_inbox_url == null
+          ? null
+          : { sharedInbox: new URL(f.shared_inbox_url) },
+      }));
+      return { items };
+    },
+  )
+  .setCounter((ctx, identifier) => {
+    const result = db
+      .prepare(
+        `
+        SELECT count(*) AS cnt
+        FROM follows
+        JOIN actors ON actors.id = follows.following_id
+        JOIN users ON users.id = actors.user_id
+        WHERE users.username = ?
+        `,
+      )
+      .get<{ cnt: number }>(identifier);
+    return result == null ? 0 : result.cnt;
+  });
 
 export default federation;
