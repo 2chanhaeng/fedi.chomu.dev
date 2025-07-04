@@ -10,6 +10,7 @@ import {
   FollowerList,
   Home,
   Layout,
+  PostList,
   PostPage,
   Profile,
   SetupForm,
@@ -207,6 +208,18 @@ app.get("/users/:username", async (c) => {
     )
     .get<{ followers: number }>(user.id)!;
 
+  const posts = db
+    .prepare(
+      `
+      SELECT actors.*, posts.*
+      FROM posts
+      JOIN actors ON posts.actor_id = actors.id
+      WHERE actors.user_id = ?
+      ORDER BY posts.created DESC
+      `,
+    )
+    .all<Post & Actor>(user.user_id);
+
   const url = new URL(c.req.url);
   const handle = `@${user.username}@${url.host}`;
   return c.html(
@@ -217,6 +230,7 @@ app.get("/users/:username", async (c) => {
         handle={handle}
         followers={followers}
       />
+      <PostList posts={posts} />
     </Layout>,
   );
 });
