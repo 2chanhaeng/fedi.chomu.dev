@@ -4,7 +4,7 @@ import { getLogger } from "@logtape/logtape";
 import db from "./db.ts";
 import fedi from "./federation.ts";
 import type { User } from "./schema.ts";
-import { Layout, SetupForm } from "./views.tsx";
+import { Layout, Profile, SetupForm } from "./views.tsx";
 
 const logger = getLogger("fedify-example");
 
@@ -32,6 +32,20 @@ app.get("/setup", (c) => {
   return c.html(
     <Layout>
       <SetupForm />
+    </Layout>,
+  );
+});
+app.get("/users/:username", async (c) => {
+  const user = db
+    .prepare("SELECT * FROM users WHERE username = ?")
+    .get<User>(c.req.param("username"));
+  if (user == null) return c.notFound();
+
+  const url = new URL(c.req.url);
+  const handle = `@${user.username}@${url.host}`;
+  return c.html(
+    <Layout>
+      <Profile name={user.username} handle={handle} />
     </Layout>,
   );
 });
