@@ -1,5 +1,5 @@
 import type { FC } from "@hono/hono/jsx";
-import type { Actor, User } from "./schema.ts";
+import type { Actor, Post, User } from "./schema.ts";
 
 export const Layout: FC = ({ children }) => (
   <html lang="en">
@@ -130,4 +130,39 @@ export const Home: FC<HomeProps> = ({ user }) => (
       <input type="submit" value="Post" />
     </form>
   </>
+);
+
+export interface PostPageProps extends ProfileProps, PostViewProps {}
+
+export const PostPage: FC<PostPageProps> = (props) => (
+  <>
+    <Profile
+      name={props.name}
+      username={props.username}
+      handle={props.handle}
+      followers={props.followers}
+    />
+    <PostView post={props.post} />
+  </>
+);
+
+export interface PostViewProps {
+  post: Post & Actor;
+}
+
+export const PostView: FC<PostViewProps> = ({ post }) => (
+  <article>
+    <header>
+      <ActorLink actor={post} />
+    </header>
+    {/* biome-ignore lint/security/noDangerouslySetInnerHtml: */}
+    <div dangerouslySetInnerHTML={{ __html: post.content }} />
+    <footer>
+      <a href={post.url ?? post.uri}>
+        <time datetime={new Date(post.created).toISOString()}>
+          {post.created}
+        </time>
+      </a>
+    </footer>
+  </article>
 );
