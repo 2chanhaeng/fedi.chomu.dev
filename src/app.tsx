@@ -96,6 +96,26 @@ app.get("/users/:username/followers", async (c) => {
     </Layout>,
   );
 });
+app.get("/users/:username/following", async (c) => {
+  const following = db
+    .prepare(
+      `
+      SELECT following.*
+      FROM follows
+      JOIN actors AS followers ON follows.follower_id = followers.id
+      JOIN actors AS following ON follows.following_id = following.id
+      JOIN users ON users.id = followers.user_id
+      WHERE users.username = ?
+      ORDER BY follows.created DESC
+      `,
+    )
+    .all<Actor>(c.req.param("username"));
+  return c.html(
+    <Layout>
+      <FollowingList following={following} />
+    </Layout>,
+  );
+});
 app.post("/users/:username/following", async (c) => {
   const username = c.req.param("username");
   const form = await c.req.formData();
