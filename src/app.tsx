@@ -4,7 +4,7 @@ import { getLogger } from "@logtape/logtape";
 import db from "./db.ts";
 import fedi from "./federation.ts";
 import type { Actor, User } from "./schema.ts";
-import { FollowerList, Layout, Profile, SetupForm } from "./views.tsx";
+import { FollowerList, Home, Layout, Profile, SetupForm } from "./views.tsx";
 
 const logger = getLogger("fedify-example");
 
@@ -118,6 +118,24 @@ app.get("/users/:username", async (c) => {
     </Layout>,
   );
 });
-app.get("/", (c) => c.text("Hello, Fedify!"));
+app.get("/", (c) => {
+  const user = db
+    .prepare(
+      `
+      SELECT users.*, actors.*
+      FROM users
+      JOIN actors ON users.id = actors.user_id
+      LIMIT 1
+      `,
+    )
+    .get<User & Actor>();
+  if (user == null) return c.redirect("/setup");
+
+  return c.html(
+    <Layout>
+      <Home user={user} />
+    </Layout>,
+  );
+});
 
 export default app;
