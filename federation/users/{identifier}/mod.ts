@@ -2,6 +2,7 @@ import { ActorDispatcher, Endpoints, Person } from "@fedify/fedify";
 import prisma from "prisma";
 
 const getUser: ActorDispatcher<unknown> = async (ctx, identifier) => {
+  if (!identifier) return null;
   const user = await prisma.user.findUnique({
     where: { username: identifier },
     include: { actor: true },

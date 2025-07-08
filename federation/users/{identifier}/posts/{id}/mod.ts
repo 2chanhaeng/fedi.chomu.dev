@@ -3,6 +3,7 @@ import prisma from "prisma";
 
 const noteDispatcher: ObjectDispatcher<unknown, Note, "id" | "identifier"> =
   async (ctx, values) => {
+    if (!values.id) return null;
     const post = await prisma.post.findFirst({
       where: {
         id: values.id,
