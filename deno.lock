@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@chomu/utils@*": "0.1.11",
     "jsr:@db/sqlite@*": "0.12.0",
     "jsr:@denosaurs/plug@1": "1.1.0",
     "jsr:@es-toolkit/es-toolkit@^1.38.0": "1.39.6",
@@ -38,6 +39,9 @@
     "npm:url-template@^3.1.1": "3.1.1"
   },
   "jsr": {
+    "@chomu/utils@0.1.11": {
+      "integrity": "f0814ce51d80214f041dcf8ed60b50afb860370f027e82169bb52e301d1782fb"
+    },
     "@db/sqlite@0.12.0": {
       "integrity": "dd1ef7f621ad50fc1e073a1c3609c4470bd51edc0994139c5bf9851de7a6d85f",
       "dependencies": [
@@ -349,6 +353,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@chomu/utils@*",
       "jsr:@db/sqlite@*",
       "jsr:@fedify/fedify@^1.7.2",
       "jsr:@hongminhee/x-forwarded-fetch@0.2",

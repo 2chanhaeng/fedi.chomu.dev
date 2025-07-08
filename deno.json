@@ -6,7 +6,9 @@
     "@logtape/logtape": "jsr:@logtape/logtape@^0.8.2",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
     "sqlite": "jsr:@db/sqlite",
-    "stringify-entities": "npm:stringify-entities@^4.0.4"
+    "stringify-entities": "npm:stringify-entities@^4.0.4",
+    "utils": "jsr:@chomu/utils",
+    "@/": "./"
   },
   "unstable": [
     "temporal"
