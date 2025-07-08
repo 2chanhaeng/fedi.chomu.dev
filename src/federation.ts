@@ -19,8 +19,7 @@ import {
   Undo,
 } from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
-import db from "./db.ts";
-import type { Actor, Key, Post, User } from "./schema.ts";
+import prisma, { Prisma } from "prisma";
 
 const logger = getLogger("fedify-example");
 
@@ -32,22 +31,17 @@ const federation = createFederation({
 federation.setActorDispatcher(
   "/users/{identifier}",
   async (ctx, identifier) => {
-    const user = db
-      .prepare(
-        `
-      SELECT * FROM users
-      JOIN actors ON (users.id = actors.user_id)
-      WHERE users.username = ?
-      `,
-      )
-      .get<User & Actor>(identifier);
-    if (user == null) return null;
+    const user = await prisma.user.findUnique({
+      where: { username: identifier },
+      include: { actor: true },
+    });
+    if (user?.actor == null) return null;
 
     const keys = await ctx.getActorKeyPairs(identifier);
     return new Person({
       id: ctx.getActorUri(identifier),
       preferredUsername: identifier,
-      name: user.name,
+      name: user.actor.name,
       inbox: ctx.getInboxUri(identifier),
       endpoints: new Endpoints({
         sharedInbox: ctx.getInboxUri(),
@@ -59,16 +53,15 @@ federation.setActorDispatcher(
     });
   },
 ).setKeyPairsDispatcher(async (ctx, identifier) => {
-  const user = db
-    .prepare("SELECT * FROM users WHERE username = ?")
-    .get<User>(identifier);
+  const user = await prisma.user.findUnique({
+    where: { username: identifier },
+    include: { keys: true },
+  });
   if (user == null) return [];
-  const rows = db
-    .prepare("SELECT * FROM keys WHERE keys.user_id = ?")
-    .all<Key>(user.id);
+
   const keys = Object.fromEntries(
-    rows.map((row) => [row.type, row]),
-  ) as Record<Key["type"], Key>;
+    user.keys.map((row) => [row.type, row]),
+  ) as Record<string, typeof user.keys[0]>;
   const pairs: CryptoKeyPair[] = [];
   // 사용자가 지원하는 두 키 형식 (RSASSA-PKCS1-v1_5 및 Ed25519) 각각에 대해
   // 키 쌍을 보유하고 있는지 확인하고, 없으면 생성 후 데이터베이스에 저장:
@@ -79,26 +72,23 @@ federation.setActorDispatcher(
         { identifier, keyType },
       );
       const { privateKey, publicKey } = await generateCryptoKeyPair(keyType);
-      db.prepare(
-        `
-          INSERT INTO keys (user_id, type, private_key, public_key)
-          VALUES (?, ?, ?, ?)
-          `,
-      ).run(
-        user.id,
-        keyType,
-        JSON.stringify(await exportJwk(privateKey)),
-        JSON.stringify(await exportJwk(publicKey)),
-      );
+      await prisma.key.create({
+        data: {
+          userId: user.id,
+          type: keyType,
+          privateKey: JSON.stringify(await exportJwk(privateKey)),
+          publicKey: JSON.stringify(await exportJwk(publicKey)),
+        },
+      });
       pairs.push({ privateKey, publicKey });
     } else {
       pairs.push({
         privateKey: await importJwk(
-          JSON.parse(keys[keyType].private_key),
+          JSON.parse(keys[keyType].privateKey),
           "private",
         ),
         publicKey: await importJwk(
-          JSON.parse(keys[keyType].public_key),
+          JSON.parse(keys[keyType].publicKey),
           "public",
         ),
       });
@@ -106,6 +96,7 @@ federation.setActorDispatcher(
   }
   return pairs;
 });
+
 federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
   Follow,
   async (ctx, follow) => {
@@ -129,42 +120,47 @@ federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
       });
       return;
     }
-    const followingId = db
-      .prepare(
-        `
-        SELECT * FROM actors
-        JOIN users ON users.id = actors.user_id
-        WHERE users.username = ?
-        `,
-      )
-      .get<Actor>(object.identifier)?.id;
-    if (followingId == null) {
+    const followingActor = await prisma.actor.findFirst({
+      where: {
+        user: { username: object.identifier },
+      },
+    });
+    if (followingActor == null) {
       logger.debug(
         "Failed to find the actor to follow in the database: {object}",
         { object },
       );
+      return;
     }
-    db
-      .prepare(
-        `
-        INSERT INTO actors (uri, handle, name, inbox_url, shared_inbox_url, url)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT (uri) DO UPDATE SET
-          handle = excluded.handle, name = excluded.name, inbox_url = excluded.inbox_url, shared_inbox_url = excluded.shared_inbox_url, url = excluded.url
-        WHERE actors.uri = excluded.uri RETURNING *
-        `,
-      ).run(
-        follower.id.href,
-        await getActorHandle(follower),
-        follower.name?.toString(),
-        follower.inboxId.href,
-        follower.endpoints?.sharedInbox?.href ?? "",
-        follower.url?.href?.toString() ?? "",
-      );
-    const followerId = (await persistActor(follower))?.id;
-    db.prepare(
-      "INSERT INTO follows (following_id, follower_id) VALUES (?, ?)",
-    ).run(followingId, followerId);
+    const followingId = followingActor.id;
+
+    const followerActor = await prisma.actor.upsert({
+      where: { uri: follower.id.href },
+      update: {
+        handle: await getActorHandle(follower),
+        name: follower.name?.toString(),
+        inboxUrl: follower.inboxId.href,
+        sharedInboxUrl: follower.endpoints?.sharedInbox?.href,
+        url: follower.url?.href?.toString(),
+      },
+      create: {
+        uri: follower.id.href,
+        handle: await getActorHandle(follower),
+        name: follower.name?.toString(),
+        inboxUrl: follower.inboxId.href,
+        sharedInboxUrl: follower.endpoints?.sharedInbox?.href,
+        url: follower.url?.href?.toString(),
+      },
+    });
+    const followerId = followerActor.id;
+
+    await prisma.follow.create({
+      data: {
+        followingId: followingId,
+        followerId: followerId,
+      },
+    });
+
     const accept = new Accept({
       actor: follow.objectId,
       to: follow.actorId,
@@ -178,17 +174,17 @@ federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
   if (undo.actorId == null || object.objectId == null) return;
   const parsed = ctx.parseUri(object.objectId);
   if (parsed == null || parsed.type !== "actor") return;
-  db.prepare(
-    `
-      DELETE FROM follows
-      WHERE following_id = (
-        SELECT actors.id
-        FROM actors
-        JOIN users ON actors.user_id = users.id
-        WHERE users.username = ?
-      ) AND follower_id = (SELECT id FROM actors WHERE uri = ?)
-      `,
-  ).run(parsed.identifier, undo.actorId.href);
+
+  await prisma.follow.deleteMany({
+    where: {
+      following: {
+        user: { username: parsed.identifier },
+      },
+      follower: {
+        uri: undo.actorId.href,
+      },
+    },
+  });
 }).on(Accept, async (ctx, accept) => {
   const follow = await accept.getObject();
   if (!(follow instanceof Follow)) return;
@@ -198,22 +194,22 @@ federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
   if (follower == null) return;
   const parsed = ctx.parseUri(follower);
   if (parsed == null || parsed.type !== "actor") return;
-  const followingId = (await persistActor(following))?.id;
-  if (followingId == null) return;
-  db.prepare(
-    `
-      INSERT INTO follows (following_id, follower_id)
-      VALUES (
-        ?,
-        (
-          SELECT actors.id
-          FROM actors
-          JOIN users ON actors.user_id = users.id
-          WHERE users.username = ?
-        )
-      )
-      `,
-  ).run(followingId, parsed.identifier);
+  const followingActor = await persistActor(following);
+  if (followingActor == null) return;
+
+  const followerActor = await prisma.actor.findFirst({
+    where: {
+      user: { username: parsed.identifier },
+    },
+  });
+  if (followerActor == null) return;
+
+  await prisma.follow.create({
+    data: {
+      followingId: followingActor.id,
+      followerId: followerActor.id,
+    },
+  });
 }).on(Create, async (ctx, create) => {
   const object = await create.getObject();
   if (!(object instanceof Note)) return;
@@ -221,71 +217,72 @@ federation.setInboxListeners("/users/{identifier}/inbox", "/inbox").on(
   if (actor == null) return;
   const author = await object.getAttribution();
   if (!isActor(author) || author.id?.href !== actor.href) return;
-  const actorId = (await persistActor(author))?.id;
-  if (actorId == null) return;
+  const actorRecord = await persistActor(author);
+  if (actorRecord == null) return;
   if (object.id == null) return;
   const content = object.content?.toString();
-  db.prepare(
-    "INSERT INTO posts (uri, actor_id, content, url) VALUES (?, ?, ?, ?)",
-  ).run(object.id.href, actorId, content, object.url?.href?.toString());
+
+  await prisma.post.create({
+    data: {
+      uri: object.id.href,
+      actorId: actorRecord.id,
+      content: content || "",
+      url: object.url?.href?.toString(),
+    },
+  });
 });
+
 federation
   .setFollowersDispatcher(
     "/users/{identifier}/followers",
-    (ctx, identifier, cursor) => {
-      const followers = db
-        .prepare(
-          `
-          SELECT followers.*
-          FROM follows
-          JOIN actors AS followers ON follows.follower_id = followers.id
-          JOIN actors AS following ON follows.following_id = following.id
-          JOIN users ON users.id = following.user_id
-          WHERE users.username = ?
-          ORDER BY follows.created DESC
-          `,
-        )
-        .all<Actor>(identifier);
+    async (ctx, identifier, cursor) => {
+      const followers = await prisma.actor.findMany({
+        where: {
+          followers: {
+            some: {
+              following: {
+                user: { username: identifier },
+              },
+            },
+          },
+        },
+        orderBy: { created: "desc" },
+      });
+
       const items: Recipient[] = followers.map((f) => ({
         id: new URL(f.uri),
-        inboxId: new URL(f.inbox_url),
-        endpoints: f.shared_inbox_url == null
+        inboxId: new URL(f.inboxUrl),
+        endpoints: f.sharedInboxUrl == null
           ? null
-          : { sharedInbox: new URL(f.shared_inbox_url) },
+          : { sharedInbox: new URL(f.sharedInboxUrl) },
       }));
       return { items };
     },
   )
-  .setCounter((ctx, identifier) => {
-    const result = db
-      .prepare(
-        `
-        SELECT count(*) AS cnt
-        FROM follows
-        JOIN actors ON actors.id = follows.following_id
-        JOIN users ON users.id = actors.user_id
-        WHERE users.username = ?
-        `,
-      )
-      .get<{ cnt: number }>(identifier);
-    return result == null ? 0 : result.cnt;
+  .setCounter(async (ctx, identifier) => {
+    const count = await prisma.follow.count({
+      where: {
+        following: {
+          user: { username: identifier },
+        },
+      },
+    });
+    return count;
   });
+
 federation.setObjectDispatcher(
   Note,
   "/users/{identifier}/posts/{id}",
-  (ctx, values) => {
-    const post = db
-      .prepare(
-        `
-        SELECT posts.*
-        FROM posts
-        JOIN actors ON actors.id = posts.actor_id
-        JOIN users ON users.id = actors.user_id
-        WHERE users.username = ? AND posts.id = ?
-        `,
-      )
-      .get<Post>(values.identifier, values.id);
-    console.log("post", post);
+  async (ctx, values) => {
+    const post = await prisma.post.findFirst({
+      where: {
+        id: values.id,
+        actor: {
+          user: { username: values.identifier },
+        },
+      },
+    });
+
     if (post == null) return null;
     return new Note({
       id: ctx.getObjectUri(Note, values),
@@ -294,7 +291,7 @@ federation.setObjectDispatcher(
       cc: ctx.getFollowersUri(values.identifier),
       content: post.content,
       mediaType: "text/html",
-      published: Temporal.Instant.from(`${post.created.replace(" ", "T")}Z`),
+      published: Temporal.Instant.from(post.created.toISOString()),
       url: ctx.getObjectUri(Note, values),
     });
   },
@@ -302,29 +299,31 @@ federation.setObjectDispatcher(
 
 export default federation;
 
-async function persistActor(actor: APActor): Promise<Actor | null> {
+async function persistActor(
+  actor: APActor,
+): Promise<Prisma.ActorGetPayload<Record<PropertyKey, never>> | null> {
   if (actor.id == null || actor.inboxId == null) {
     logger.debug("Actor is missing required fields: {actor}", { actor });
     return null;
   }
-  db.prepare(
-    `
-    INSERT INTO actors (uri, handle, name, inbox_url, shared_inbox_url, url)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT (uri) DO UPDATE SET
-      handle = excluded.handle, name = excluded.name, inbox_url = excluded.inbox_url, shared_inbox_url = excluded.shared_inbox_url, url = excluded.url
-    WHERE actors.uri = excluded.uri RETURNING *
-    `,
-  )
-    .get<Actor>(
-      actor.id.href,
-      await getActorHandle(actor),
-      actor.name?.toString(),
-      actor.inboxId.href,
-      actor.endpoints?.sharedInbox?.href,
-      actor.url?.href?.toString(),
-    );
-  return db.prepare(
-    "SELECT id FROM actors WHERE uri = ?",
-  ).get<Actor>(actor.id.href) ?? null;
+
+  try {
+    const uri = actor.id.href;
+    const update = {
+      handle: await getActorHandle(actor),
+      name: actor.name?.toString(),
+      inboxUrl: actor.inboxId.href,
+      sharedInboxUrl: actor.endpoints?.sharedInbox?.href,
+      url: actor.url?.href?.toString(),
+    };
+    const result = await prisma.actor.upsert({
+      where: { uri },
+      update,
+      create: { uri, ...update },
+    });
+    return result;
+  } catch (error) {
+    logger.error("Failed to persist actor: {error}", { error });
+    return null;
+  }
 }

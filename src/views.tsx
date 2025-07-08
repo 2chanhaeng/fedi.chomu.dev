@@ -1,5 +1,5 @@
 import type { FC } from "@hono/hono/jsx";
-import type { Actor, Post, User } from "./schema.ts";
+import type { Actor, Post, User } from "prisma";
 
 export const Layout: FC = ({ children }) => (
   <html lang="en">
@@ -130,7 +130,7 @@ export const Home: FC<HomeProps> = ({ user, posts }) => (
         <input
           type="text"
           name="actor"
-          required={true}
+          required
           placeholder="Enter an actor handle (e.g., @johndoe@mastodon.com) or URI (e.g., https://mastodon.com/@johndoe)"
         />
         <input type="submit" value="Follow" />
@@ -139,7 +139,7 @@ export const Home: FC<HomeProps> = ({ user, posts }) => (
     <form method="post" action={`/users/${user.username}/posts`}>
       <fieldset>
         <label>
-          <textarea name="content" required={true} placeholder="What's up?" />
+          <textarea name="content" required placeholder="What's up?" />
         </label>
       </fieldset>
       <input type="submit" value="Post" />
