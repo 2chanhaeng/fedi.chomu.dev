@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+  runtime  = "deno"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid(2))
+  username String @unique
+
+  // Relations
+  actor Actor?
+  keys  Key[]
+}
+
+model Actor {
+  id             String   @id @default(cuid(2))
+  userId         String?  @unique @map("user_id")
+  uri            String   @unique
+  handle         String   @unique
+  name           String?
+  inboxUrl       String   @unique @map("inbox_url")
+  sharedInboxUrl String?  @map("shared_inbox_url")
+  url            String?
+  created        DateTime @default(now())
+
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id])
+  posts     Post[]
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Follower")
+}
+
+model Key {
+  userId     String   @map("user_id")
+  type       String
+  privateKey String   @map("private_key")
+  publicKey  String   @map("public_key")
+  created    DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, type])
+}
+
+model Follow {
+  followingId String   @map("following_id")
+  followerId  String   @map("follower_id")
+  created     DateTime @default(now())
+
+  // Relations
+  following Actor @relation("Following", fields: [followingId], references: [id])
+  follower  Actor @relation("Follower", fields: [followerId], references: [id])
+
+  @@id([followingId, followerId])
+}
+
+model Post {
+  id      String   @id @default(cuid(2))
+  uri     String   @unique
+  actorId String   @map("actor_id")
+  content String
+  url     String?
+  created DateTime @default(now())
+
+  // Relations
+  actor Actor @relation(fields: [actorId], references: [id])
+}

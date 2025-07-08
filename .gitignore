@@ -2,3 +2,6 @@
 **/*.sqlite3-shm
 **/*.sqlite3-wal
 .env
+/prisma/*
+!/prisma/schema.prisma
+!/prisma/mod.ts

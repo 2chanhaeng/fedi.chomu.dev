@@ -4,7 +4,9 @@
     "@hongminhee/x-forwarded-fetch": "jsr:@hongminhee/x-forwarded-fetch@^0.2.0",
     "@hono/hono": "jsr:@hono/hono@^4.8.4",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.8.2",
+    "@prisma/client": "npm:@prisma/client@^6.11.1",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
+    "prisma": "./prisma/mod.ts",
     "sqlite": "jsr:@db/sqlite",
     "stringify-entities": "npm:stringify-entities@^4.0.4",
     "utils": "jsr:@chomu/utils",
@@ -15,7 +17,12 @@
   ],
   "tasks": {
     "dev": "deno run -A --watch ./src/mod.ts",
-    "prod": "deno run -A ./src/mod.ts"
+    "prod": "deno run -A ./src/mod.ts",
+    "db:mig": "deno run -A npm:prisma migrate dev",
+    "db:push": "deno run -A npm:prisma db push",
+    "db:pull": "deno run -A npm:prisma db pull",
+    "db:std": "deno run -A npm:prisma studio",
+    "db:gen": "deno run -A npm:prisma generate"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
