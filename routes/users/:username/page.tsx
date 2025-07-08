@@ -6,7 +6,7 @@ import { Context } from "@hono/hono";
 import { BlankEnv, BlankInput } from "@hono/hono/types";
 import prisma from "prisma";
 
-export default async function UsersPage(
+export default async function UserPage(
   c: Context<BlankEnv, "/users/:username", BlankInput>,
 ): Promise<Response> {
   const username = c.req.param("username");

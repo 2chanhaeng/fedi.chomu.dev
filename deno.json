@@ -18,8 +18,8 @@
     "temporal"
   ],
   "tasks": {
-    "dev": "deno run -A --watch ./src/mod.ts",
-    "prod": "deno run -A ./src/mod.ts",
+    "dev": "deno run -A --watch ./main.ts",
+    "prod": "deno run -A ./main.ts",
     "db:mig": "deno run -A npm:prisma migrate dev",
     "db:push": "deno run -A npm:prisma db push",
     "db:pull": "deno run -A npm:prisma db pull",
