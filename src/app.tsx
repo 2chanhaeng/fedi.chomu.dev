@@ -21,47 +21,6 @@ const logger = getLogger("fedify-example");
 const app = new Hono();
 
 app.use(federation(fedi, () => undefined));
-app.post("/setup", async (c) => {
-  // 계정이 이미 있는지 검사
-  const exists = await prisma.user.count();
-  if (exists) return c.redirect("/");
-
-  const form = await c.req.formData();
-  const username = form.get("username");
-  if (typeof username !== "string") {
-    return c.redirect("/setup");
-  }
-  const name = form.get("name");
-  if (typeof name !== "string" || name.trim() === "") {
-    return c.redirect("/setup");
-  }
-  const url = new URL(c.req.url);
-  const handle = `@${username}@${url.host}`;
-  const ctx = fedi.createContext(c.req.raw, undefined);
-  const user = await prisma.user.create({ data: { username } });
-  const data = {
-    userId: user.id,
-    uri: ctx.getActorUri(username).href,
-    handle: handle,
-    name: name,
-    inboxUrl: ctx.getInboxUri(username).href,
-    sharedInboxUrl: ctx.getInboxUri().href,
-    url: ctx.getActorUri(username).href,
-  };
-  await prisma.actor.create({ data });
-  return c.redirect("/");
-});
-app.get("/setup", async (c) => {
-  // 계정이 이미 있는지 검사
-  const exists = await prisma.user.count();
-  if (exists) return c.redirect("/");
-
-  return c.html(
-    <Layout>
-      <SetupForm />
-    </Layout>,
-  );
-});
 app.get("/users/:username/followers", async (c) => {
   const username = c.req.param("username");
   const user = await prisma.user.findUnique({
