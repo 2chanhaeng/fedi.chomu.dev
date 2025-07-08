@@ -6,6 +6,8 @@
     "@logtape/logtape": "jsr:@logtape/logtape@^0.8.2",
     "@prisma/client": "npm:@prisma/client@^6.11.1",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
+    "@std/fs": "jsr:@std/fs@^1.0.19",
+    "@std/path": "jsr:@std/path@^1.1.1",
     "prisma": "./prisma/mod.ts",
     "sqlite": "jsr:@db/sqlite",
     "stringify-entities": "npm:stringify-entities@^4.0.4",

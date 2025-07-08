@@ -17,6 +17,7 @@
     "jsr:@std/encoding@1": "1.0.10",
     "jsr:@std/fmt@1": "1.0.8",
     "jsr:@std/fs@1": "1.0.19",
+    "jsr:@std/fs@^1.0.19": "1.0.19",
     "jsr:@std/internal@^1.0.9": "1.0.9",
     "jsr:@std/path@0.217": "0.217.0",
     "jsr:@std/path@1": "1.1.1",
@@ -56,7 +57,7 @@
       "dependencies": [
         "jsr:@std/encoding",
         "jsr:@std/fmt",
-        "jsr:@std/fs",
+        "jsr:@std/fs@1",
         "jsr:@std/path@1"
       ]
     },
@@ -415,6 +416,8 @@
       "jsr:@hono/hono@^4.8.4",
       "jsr:@logtape/logtape@~0.8.2",
       "jsr:@std/dotenv@~0.225.5",
+      "jsr:@std/fs@^1.0.19",
+      "jsr:@std/path@^1.1.1",
       "npm:@prisma/client@^6.11.1",
       "npm:stringify-entities@^4.0.4"
     ]
