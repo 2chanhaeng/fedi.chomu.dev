@@ -12,8 +12,8 @@
     "temporal"
   ],
   "tasks": {
-    "dev": "deno run -A --watch ./src/index.ts",
-    "prod": "deno run -A ./src/index.ts"
+    "dev": "deno run -A --watch ./src/mod.ts",
+    "prod": "deno run -A ./src/mod.ts"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
