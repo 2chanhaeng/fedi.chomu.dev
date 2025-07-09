@@ -14,8 +14,31 @@ model User {
   username String @unique
 
   // Relations
-  actor Actor?
-  keys  Key[]
+  actor    Actor?
+  keys     Key[]
+  accounts Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
 model Actor {
@@ -28,9 +51,10 @@ model Actor {
   sharedInboxUrl String?  @map("shared_inbox_url")
   url            String?
   created        DateTime @default(now())
+  avatar         String?
 
   // Relations
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts     Post[]
   following Follow[] @relation("Following")
   followers Follow[] @relation("Follower")
@@ -44,7 +68,7 @@ model Key {
   created    DateTime @default(now())
 
   // Relations
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, type])
 }
@@ -55,8 +79,8 @@ model Follow {
   created     DateTime @default(now())
 
   // Relations
-  following Actor @relation("Following", fields: [followingId], references: [id])
-  follower  Actor @relation("Follower", fields: [followerId], references: [id])
+  following Actor @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  Actor @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
 
   @@id([followingId, followerId])
 }
@@ -70,5 +94,5 @@ model Post {
   created DateTime @default(now())
 
   // Relations
-  actor Actor @relation(fields: [actorId], references: [id])
+  actor Actor @relation(fields: [actorId], references: [id], onDelete: Cascade)
 }

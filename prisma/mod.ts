@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 
 export default prisma;
 export type {
+  Account,
   Actor,
   Follow,
   Key,
