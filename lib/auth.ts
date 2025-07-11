@@ -1,17 +1,10 @@
+import { AuthUser } from "@/types/auth.ts";
 import { Context, Next } from "@hono/hono";
 import { getCookie } from "@hono/hono/cookie";
 import prisma from "prisma";
 
 export interface AuthContext {
-  user?: {
-    id: string;
-    username: string;
-    actor?: {
-      id: string;
-      name: string | null;
-      handle: string;
-    };
-  };
+  user?: AuthUser;
 }
 
 // 인증 미들웨어
@@ -41,7 +34,7 @@ export async function requireAuth(c: Context, next: Next) {
   const user = c.get("user");
 
   if (!user) {
-    return c.redirect("/auth/github");
+    return c.redirect("/auth/login");
   }
 
   await next();
