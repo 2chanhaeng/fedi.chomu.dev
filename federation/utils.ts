@@ -34,7 +34,4 @@ export async function persistActor(
 }
 
 export const findActor = (username: string) =>
-  prisma.user.findUnique({
-    where: { username },
-    include: { actor: true },
-  }).actor();
+  prisma.user.findUnique({ where: { username } }).actor();
