@@ -56,8 +56,8 @@ model Actor {
   // Relations
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts     Post[]
-  following Follow[] @relation("Following")
-  followers Follow[] @relation("Follower")
+  following Follow[] @relation("Follower")
+  followers Follow[] @relation("Following")
 }
 
 model Key {
