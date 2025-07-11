@@ -1,6 +1,13 @@
+import { AuthUser } from "@/types/auth.ts";
 import type { Child } from "@hono/hono/jsx";
+import HeaderNavigator from "./HeaderNavigator.tsx";
 
-export default function Layout({ children }: { children: Child }) {
+interface LayoutProps {
+  children: Child;
+  user?: AuthUser;
+}
+
+export default function Layout({ children, user }: LayoutProps) {
   return (
     <html>
       <head>
@@ -14,6 +21,7 @@ export default function Layout({ children }: { children: Child }) {
         />
       </head>
       <body>
+        <HeaderNavigator user={user} />
         <main class="container">{children}</main>
       </body>
     </html>
