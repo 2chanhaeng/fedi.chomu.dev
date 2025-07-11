@@ -9,10 +9,7 @@ const followersDispatcher: CollectionDispatcher<
 > = async (_ctx, identifier, _cursor) => {
   const followers = await prisma.user.findUnique({
     where: { username: identifier },
-    include: { actor: true },
-  }).actor({
-    include: { followers: true },
-  }).followers({
+  }).actor().followers({
     include: { follower: true },
     orderBy: { created: "desc" },
   }) ?? [];
