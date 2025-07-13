@@ -18,31 +18,57 @@ import followersDispatcher from "./users/{identifier}/followers/mod.ts";
 import getUser from "./users/{identifier}/mod.ts";
 import noteDispatcher from "./users/{identifier}/posts/{id}/mod.ts";
 
+type ActorPath =
+  | `${string}{identifier}${string}`
+  | `${string}{handle}${string}`;
+
 const fedi = createFederation({
   kv: new MemoryKvStore(),
   queue: new InProcessMessageQueue(),
 });
 
-fedi.setActorDispatcher("/users/{identifier}", getUser)
-  .setKeyPairsDispatcher(getKeys);
+const actorPaths = [
+  "/users/{identifier}",
+  "/@{identifier}",
+] as ActorPath[];
+const compositePaths = {
+  inbox: ((path: ActorPath) => path + "/inbox" as ActorPath),
+  followers: ((path: ActorPath) => path + "/followers" as ActorPath),
+  posts:
+    ((path: ActorPath) => path + "/posts/{id}" as `${ActorPath}/posts/{id}`),
+};
 
-fedi.setInboxListeners("/users/{identifier}/inbox", "/inbox") //
-  .on(Follow, inboxFollowHandler) //
-  .on(Undo, inboxUndoHandler) //
-  .on(Accept, inboxAcceptHandler) //
-  .on(Create, inboxCreateHandler);
-
-fedi
-  .setFollowersDispatcher(
-    "/users/{identifier}/followers",
-    followersDispatcher,
-  )
-  .setCounter(followerCounter);
-
-fedi.setObjectDispatcher(
-  Note,
-  "/users/{identifier}/posts/{id}",
-  noteDispatcher,
+actorPaths.forEach((path) =>
+  fedi
+    .setActorDispatcher(path, getUser)
+    .setKeyPairsDispatcher(getKeys)
 );
+actorPaths.map(compositePaths.inbox)
+  .forEach((path) =>
+    fedi
+      .setInboxListeners(path, "/inbox")
+      .on(Follow, inboxFollowHandler)
+      .on(Undo, inboxUndoHandler)
+      .on(Accept, inboxAcceptHandler)
+      .on(Create, inboxCreateHandler)
+  );
+actorPaths.map(compositePaths.followers)
+  .forEach((path) =>
+    fedi
+      .setFollowersDispatcher(
+        path,
+        followersDispatcher,
+      )
+      .setCounter(followerCounter)
+  );
+actorPaths.map(compositePaths.posts)
+  .forEach((path) =>
+    fedi
+      .setObjectDispatcher(
+        Note,
+        path,
+        noteDispatcher,
+      )
+  );
 
 export default fedi;
