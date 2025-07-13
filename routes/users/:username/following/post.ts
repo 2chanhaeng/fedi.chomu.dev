@@ -21,16 +21,21 @@ export default async function UserFollowingPost(
       throw new ActorNotFoundError();
     }
     const actorId = actor.id;
+    const followId = new URL(
+      `#Follow/${crypto.randomUUID()}`,
+      ctx.getActorUri(username),
+    );
     await ctx.sendActivity(
       { identifier: username },
       actor,
       new Follow({
+        id: followId,
         actor: ctx.getActorUri(username),
         object: actorId,
         to: actorId,
       }),
     );
-    return c.redirect(actorId ?? "/");
+    return c.redirect("/");
   } catch (error) {
     if (error instanceof ErrorWithState) {
       return c.text(error.message, error.state);

@@ -3,17 +3,17 @@ import prisma from "prisma";
 
 const getUser: ActorDispatcher<unknown> = async (ctx, identifier) => {
   if (!identifier) return null;
-  const user = await prisma.user.findUnique({
+
+  const actor = await prisma.user.findUnique({
     where: { username: identifier },
-    include: { actor: true },
-  });
-  if (user?.actor == null) return null;
+  }).actor();
+  if (actor == null) return null;
 
   const keys = await ctx.getActorKeyPairs(identifier);
   return new Person({
     id: ctx.getActorUri(identifier),
     preferredUsername: identifier,
-    name: user.actor.name,
+    name: actor.name,
     inbox: ctx.getInboxUri(identifier),
     endpoints: new Endpoints({
       sharedInbox: ctx.getInboxUri(),
