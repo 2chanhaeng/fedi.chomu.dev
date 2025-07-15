@@ -15,6 +15,8 @@ import inboxUndoHandler from "./inbox/undo.ts";
 import getKeys from "./keys/mod.ts";
 import followerCounter from "./users/{identifier}/followers/count.ts";
 import followersDispatcher from "./users/{identifier}/followers/mod.ts";
+import followingCounter from "./users/{identifier}/following/count.ts";
+import followingDispatcher from "./users/{identifier}/following/mod.ts";
 import getUser from "./users/{identifier}/mod.ts";
 import noteDispatcher from "./users/{identifier}/posts/{id}/mod.ts";
 
@@ -34,6 +36,7 @@ const actorPaths = [
 const compositePaths = {
   inbox: ((path: ActorPath) => path + "/inbox" as ActorPath),
   followers: ((path: ActorPath) => path + "/followers" as ActorPath),
+  following: ((path: ActorPath) => path + "/following" as ActorPath),
   posts:
     ((path: ActorPath) => path + "/posts/{id}" as `${ActorPath}/posts/{id}`),
 };
@@ -55,11 +58,13 @@ actorPaths.map(compositePaths.inbox)
 actorPaths.map(compositePaths.followers)
   .forEach((path) =>
     fedi
-      .setFollowersDispatcher(
-        path,
-        followersDispatcher,
-      )
+      .setFollowersDispatcher(path, followersDispatcher)
       .setCounter(followerCounter)
+  );
+actorPaths.map(compositePaths.following)
+  .forEach((path) =>
+    fedi
+      .setFollowingDispatcher(path, followingDispatcher)
   );
 actorPaths.map(compositePaths.posts)
   .forEach((path) =>
