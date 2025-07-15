@@ -65,6 +65,7 @@ actorPaths.map(compositePaths.following)
   .forEach((path) =>
     fedi
       .setFollowingDispatcher(path, followingDispatcher)
+      .setCounter(followingCounter)
   );
 actorPaths.map(compositePaths.posts)
   .forEach((path) =>
