@@ -1,8 +1,8 @@
 {
   "imports": {
-    "@fedify/fedify": "jsr:@fedify/fedify@^1.7.2",
+    "@fedify/fedify": "jsr:@fedify/fedify@^1.7.4",
     "@hongminhee/x-forwarded-fetch": "jsr:@hongminhee/x-forwarded-fetch@^0.2.0",
-    "@hono/hono": "jsr:@hono/hono@^4.8.4",
+    "@hono/hono": "jsr:@hono/hono@^4.8.5",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.8.2",
     "@prisma/client": "npm:@prisma/client@^6.11.1",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
@@ -11,7 +11,7 @@
     "prisma": "./prisma/mod.ts",
     "sqlite": "jsr:@db/sqlite",
     "stringify-entities": "npm:stringify-entities@^4.0.4",
-    "utils": "jsr:@chomu/utils",
+    "utils": "jsr:@chomu/utils@0.1.12",
     "@/": "./"
   },
   "unstable": [

@@ -1,16 +1,16 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@chomu/utils@*": "0.1.11",
+    "jsr:@chomu/utils@0.1.12": "0.1.12",
     "jsr:@db/sqlite@*": "0.12.0",
     "jsr:@denosaurs/plug@1": "1.1.0",
     "jsr:@es-toolkit/es-toolkit@^1.38.0": "1.39.6",
-    "jsr:@fedify/fedify@^1.7.2": "1.7.2",
+    "jsr:@fedify/fedify@^1.7.4": "1.7.4",
     "jsr:@hongminhee/x-forwarded-fetch@0.2": "0.2.0",
-    "jsr:@hono/hono@^4.8.4": "4.8.4",
+    "jsr:@hono/hono@^4.8.5": "4.8.5",
     "jsr:@hugoalh/http-header-link@^1.0.2": "1.0.3",
     "jsr:@hugoalh/is-string-singleline@^1.0.4": "1.0.5",
-    "jsr:@logtape/logtape@1": "1.0.2",
+    "jsr:@logtape/logtape@1": "1.0.4",
     "jsr:@logtape/logtape@~0.8.2": "0.8.2",
     "jsr:@std/assert@0.217": "0.217.0",
     "jsr:@std/dotenv@~0.225.5": "0.225.5",
@@ -22,7 +22,6 @@
     "jsr:@std/path@0.217": "0.217.0",
     "jsr:@std/path@1": "1.1.1",
     "jsr:@std/path@^1.1.1": "1.1.1",
-    "npm:@cloudflare/workers-types@^4.20250529.0": "4.20250704.0",
     "npm:@multiformats/base-x@^4.0.1": "4.0.1",
     "npm:@opentelemetry/api@^1.9.0": "1.9.0",
     "npm:@opentelemetry/semantic-conventions@^1.27.0": "1.34.0",
@@ -42,8 +41,8 @@
     "npm:url-template@^3.1.1": "3.1.1"
   },
   "jsr": {
-    "@chomu/utils@0.1.11": {
-      "integrity": "f0814ce51d80214f041dcf8ed60b50afb860370f027e82169bb52e301d1782fb"
+    "@chomu/utils@0.1.12": {
+      "integrity": "4bd3e6742862532b90b5f63833e4ac4202543bac0224886a46eaf65630d60834"
     },
     "@db/sqlite@0.12.0": {
       "integrity": "dd1ef7f621ad50fc1e073a1c3609c4470bd51edc0994139c5bf9851de7a6d85f",
@@ -64,13 +63,12 @@
     "@es-toolkit/es-toolkit@1.39.6": {
       "integrity": "efd32642639632ba7af97ffad64562503b15e0f14f2fa9b3f72e4d7da9834e14"
     },
-    "@fedify/fedify@1.7.2": {
-      "integrity": "1fbadb9187a31a97ad972b695ff1d41671d42d08ce68175bc611eb50966bfc00",
+    "@fedify/fedify@1.7.4": {
+      "integrity": "5adc773818e05a195b6914cd9c73feadf11c09cdbb1b2fd26c2d987e2969799e",
       "dependencies": [
         "jsr:@es-toolkit/es-toolkit",
         "jsr:@hugoalh/http-header-link",
         "jsr:@logtape/logtape@1",
-        "npm:@cloudflare/workers-types",
         "npm:@multiformats/base-x",
         "npm:@opentelemetry/api",
         "npm:@opentelemetry/semantic-conventions",
@@ -89,8 +87,8 @@
     "@hongminhee/x-forwarded-fetch@0.2.0": {
       "integrity": "8a347e061974e07b480e9461c7d84047e12e92c462fe7679a6f0f59b5c5f48d5"
     },
-    "@hono/hono@4.8.4": {
-      "integrity": "dabc0ea1185040fc1e89abfe29906d9e3dd425a4c40f903f9ead78c48917da06"
+    "@hono/hono@4.8.5": {
+      "integrity": "78f72e532f378e379915a7e1ae7bd8a171b02324bd37b70877fd35375e8c2d6b"
     },
     "@hugoalh/http-header-link@1.0.3": {
       "integrity": "3372096a73d755e3351f7fbd7155db7725874c2682a594a655580e3866563024",
@@ -104,8 +102,8 @@
     "@logtape/logtape@0.8.2": {
       "integrity": "e2ae1fc2561e8d010359b9894efb39bdb559dae44f5824540cbb26a78eee36bc"
     },
-    "@logtape/logtape@1.0.2": {
-      "integrity": "b1a429f37464c1500dc4b0f05548a2e4782790d227754b781775f782a4038ef4"
+    "@logtape/logtape@1.0.4": {
+      "integrity": "6ada87764d995b1033c352a17fd9e20b217f3672083bc2d8debe356eac03fe10"
     },
     "@std/assert@0.217.0": {
       "integrity": "c98e279362ca6982d5285c3b89517b757c1e3477ee9f14eb2fdf80a45aaa9642"
@@ -143,9 +141,6 @@
     }
   },
   "npm": {
-    "@cloudflare/workers-types@4.20250704.0": {
-      "integrity": "sha512-KR8XwXVnJdbSStdmmkkqE0ac5UCrRT+HyFnpt/VcVMzEVeAiZfH0VAcYXasMs842CE1BsdbQG0FboVV9EmyMpQ=="
-    },
     "@digitalbazaar/http-client@3.4.1_ky@0.33.3": {
       "integrity": "sha512-Ahk1N+s7urkgj7WvvUND5f8GiWEPfUw0D41hdElaqLgu8wZScI8gdI0q+qWw5N1d35x7GCRH2uk9mi+Uzo9M3g==",
       "dependencies": [
@@ -409,11 +404,11 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@chomu/utils@*",
+      "jsr:@chomu/utils@0.1.12",
       "jsr:@db/sqlite@*",
-      "jsr:@fedify/fedify@^1.7.2",
+      "jsr:@fedify/fedify@^1.7.4",
       "jsr:@hongminhee/x-forwarded-fetch@0.2",
-      "jsr:@hono/hono@^4.8.4",
+      "jsr:@hono/hono@^4.8.5",
       "jsr:@logtape/logtape@~0.8.2",
       "jsr:@std/dotenv@~0.225.5",
       "jsr:@std/fs@^1.0.19",
