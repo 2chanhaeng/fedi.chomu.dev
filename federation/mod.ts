@@ -1,80 +1,35 @@
 import {
-  Accept,
-  Create,
   createFederation,
-  Follow,
   InProcessMessageQueue,
   MemoryKvStore,
-  Note,
-  Undo,
 } from "@fedify/fedify";
-import inboxAcceptHandler from "./inbox/accept.ts";
-import inboxCreateHandler from "./inbox/create.ts";
-import inboxFollowHandler from "./inbox/follow.ts";
-import inboxUndoHandler from "./inbox/undo.ts";
-import getKeys from "./keys/mod.ts";
-import followerCounter from "./users/{identifier}/followers/count.ts";
-import followersDispatcher from "./users/{identifier}/followers/mod.ts";
-import followingCounter from "./users/{identifier}/following/count.ts";
-import followingDispatcher from "./users/{identifier}/following/mod.ts";
-import getUser from "./users/{identifier}/mod.ts";
-import noteDispatcher from "./users/{identifier}/posts/{id}/mod.ts";
+import FederationConfigurator, { ActorPath } from "./config.ts";
+import inbox from "./inbox/mod.ts";
+import outbox from "./outbox/mod.ts";
+import followers from "./users/{identifier}/followers/mod.ts";
+import following from "./users/{identifier}/following/mod.ts";
+import actor from "./users/{identifier}/mod.ts";
+import posts from "./users/{identifier}/posts/{id}/mod.ts";
 
-type ActorPath =
-  | `${string}{identifier}${string}`
-  | `${string}{handle}${string}`;
+const addActorPath = (path: string) => (actorPath: ActorPath) =>
+  `${actorPath}/${path}` as ActorPath;
 
-const fedi = createFederation({
+const configurator = new FederationConfigurator(
+  "/users/{identifier}",
+  "/inbox",
+  {
+    inbox: addActorPath("inbox"),
+    followers: addActorPath("followers"),
+    following: addActorPath("following"),
+    posts: addActorPath("posts/{id}"),
+    outbox: addActorPath("outbox"),
+  },
+  { actor, inbox, followers, following, posts, outbox },
+);
+
+const fedi = configurator.configure(createFederation({
   kv: new MemoryKvStore(),
   queue: new InProcessMessageQueue(),
-});
-
-const actorPaths = [
-  "/users/{identifier}",
-  "/@{identifier}",
-] as ActorPath[];
-const compositePaths = {
-  inbox: ((path: ActorPath) => path + "/inbox" as ActorPath),
-  followers: ((path: ActorPath) => path + "/followers" as ActorPath),
-  following: ((path: ActorPath) => path + "/following" as ActorPath),
-  posts:
-    ((path: ActorPath) => path + "/posts/{id}" as `${ActorPath}/posts/{id}`),
-};
-
-actorPaths.forEach((path) =>
-  fedi
-    .setActorDispatcher(path, getUser)
-    .setKeyPairsDispatcher(getKeys)
-);
-actorPaths.map(compositePaths.inbox)
-  .forEach((path) =>
-    fedi
-      .setInboxListeners(path, "/inbox")
-      .on(Follow, inboxFollowHandler)
-      .on(Undo, inboxUndoHandler)
-      .on(Accept, inboxAcceptHandler)
-      .on(Create, inboxCreateHandler)
-  );
-actorPaths.map(compositePaths.followers)
-  .forEach((path) =>
-    fedi
-      .setFollowersDispatcher(path, followersDispatcher)
-      .setCounter(followerCounter)
-  );
-actorPaths.map(compositePaths.following)
-  .forEach((path) =>
-    fedi
-      .setFollowingDispatcher(path, followingDispatcher)
-      .setCounter(followingCounter)
-  );
-actorPaths.map(compositePaths.posts)
-  .forEach((path) =>
-    fedi
-      .setObjectDispatcher(
-        Note,
-        path,
-        noteDispatcher,
-      )
-  );
+}));
 
 export default fedi;
